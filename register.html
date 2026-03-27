@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - SOS App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #f5f5f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        
+        .card { 
+            width: 350px; 
+            height: 650px; 
+            background: #fff; 
+            border-radius: 30px; 
+            overflow: hidden; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1); 
+            display: flex; 
+            flex-direction: column; 
+        }
+
+        .profile-header { 
+            background: linear-gradient(135deg, #ffc0cb 0%, #ff69b4 100%);
+            padding: 25px 20px; 
+            text-align: center; 
+            color: white;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+        }
+        .profile-img { width: 85px; height: 85px; border-radius: 50%; border: 3px solid white; margin-bottom: 10px; }
+        h2 { font-size: 20px; font-weight: 600; }
+
+        .content-area { padding: 20px; flex-grow: 1; overflow-y: auto; scrollbar-width: none; }
+        .content-area::-webkit-scrollbar { display: none; }
+
+        /* Form Styling */
+        .contact-form { background: #fff; border: 1px solid #ffe4e1; padding: 15px; border-radius: 20px; margin-bottom: 20px; }
+        .contact-form h3 { font-size: 14px; color: #ff1493; margin-bottom: 12px; }
+        .input-box { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 10px; font-size: 14px; outline: none; }
+        .btn-save { width: 100%; background: #ff1493; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-save:hover { background: #d8127a; }
+
+        /* Real-time Contacts List */
+        .contacts-list { margin-top: 10px; }
+        .contact-item { 
+            background: #fff0f5; 
+            padding: 12px; 
+            border-radius: 12px; 
+            margin-bottom: 10px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            border-left: 5px solid #ff1493;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .contact-info span { display: block; font-size: 14px; font-weight: 600; color: #333; }
+        .contact-info small { color: #666; font-size: 12px; }
+
+        .btn-logout { width: 100%; padding: 12px; border: none; background: #ff85a2; color: white; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+
+        /* Nav Bar */
+        .nav-bar { background: #ff85a2; display: flex; justify-content: space-around; padding: 15px 0; }
+        .nav-item { background: white; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #ff1493; font-size: 18px; text-decoration: none; }
+        .nav-item.active { border: 2.5px solid #ff1493; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="profile-header">
+            <img src="https://cdn-icons-png.flaticon.com/512/6841/6841913.png" class="profile-img">
+            <h2 id="userName">Utkarsh Deshmukh</h2>
+            <p id="userEmail" style="font-size: 12px; opacity: 0.9;">Loading...</p>
+        </div>
+
+        <div class="content-area">
+            <div class="contact-form">
+                <h3><i class="fas fa-plus-circle"></i> Add Emergency Contact</h3>
+                <input type="text" id="cName" class="input-box" placeholder="Relation (e.g. Dad/Brother)">
+                <input type="tel" id="cPhone" class="input-box" placeholder="Mobile Number">
+                <button class="btn-save" id="saveBtn">Save Successfully</button>
+            </div>
+
+            <div class="contacts-list" id="displayContacts">
+                <p style="text-align:center; font-size:12px; color:gray;">Syncing...</p>
+            </div>
+
+            <button class="btn-logout" id="logoutBtn">Log Out</button>
+        </div>
+
+        <div class="nav-bar">
+            <div class="nav-item" style="color:red" onclick="alert('SOS Triggered!')"><i class="fas fa-exclamation-circle"></i></div>
+            <a href="tel:112" class="nav-item"><i class="fas fa-phone-alt"></i></a>
+            <a href="home.html" class="nav-item"><i class="fas fa-map"></i></a>
+            <a href="info.html" class="nav-item"><i class="fas fa-book-open"></i></a>
+            <a href="profile.html" class="nav-item active"><i class="fas fa-user"></i></a>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, setDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBBecl7Q3CN8K-lh3booKDNKDj-iA5BN6w",
+            authDomain: "yash-a7421.firebaseapp.com",
+            projectId: "yash-a7421",
+            storageBucket: "yash-a7421.firebasestorage.app",
+            messagingSenderId: "163386398931",
+            appId: "1:163386398931:web:f686bc5041ea76a18b1c26"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUid = null;
+
+        // --- Authentication & Real-time Sync ---
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUid = user.uid;
+                document.getElementById('userEmail').innerText = user.email;
+                document.getElementById('userName').innerText = user.displayName || "Utkarsh Deshmukh";
+
+                // १. Real-time Firestore Listener (onSnapshot)
+                // हा कोड डेटाबेसमध्ये बदल झाला की लगेच लिस्ट अपडेट करतो.
+                const userRef = doc(db, "users", currentUid);
+                onSnapshot(userRef, (snapshot) => {
+                    const listContainer = document.getElementById('displayContacts');
+                    if (snapshot.exists() && snapshot.data().emergency_contacts) {
+                        const contacts = snapshot.data().emergency_contacts;
+                        if (contacts.length === 0) {
+                            listContainer.innerHTML = "<p style='text-align:center; font-size:12px; color:gray;'>No contacts yet.</p>";
+                        } else {
+                            listContainer.innerHTML = contacts.map(c => `
+                                <div class="contact-item">
+                                    <div class="contact-info">
+                                        <span>${c.name}</span>
+                                        <small>${c.phone}</small>
+                                    </div>
+                                    <i class="fas fa-check-circle" style="color:#ff1493"></i>
+                                </div>
+                            `).join('');
+                        }
+                    } else {
+                        listContainer.innerHTML = "<p style='text-align:center; font-size:12px; color:gray;'>No contacts added yet.</p>";
+                    }
+                });
+
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        // --- Save Contact Function ---
+        document.getElementById('saveBtn').addEventListener('click', async () => {
+            const nameInput = document.getElementById('cName');
+            const phoneInput = document.getElementById('cPhone');
+
+            if (!nameInput.value || !phoneInput.value) {
+                return alert("Please Enter name & Mobile No. !!");
+            }
+
+            try {
+                const userRef = doc(db, "users", currentUid);
+                // arrayUnion मुळे जुने कॉन्टॅक्ट न पुसता नवीन ॲड होतो.
+                await setDoc(userRef, {
+                    emergency_contacts: arrayUnion({
+                        name: nameInput.value.trim(),
+                        phone: phoneInput.value.trim()
+                    })
+                }, { merge: true });
+
+                alert("Saved Successfully! ✅");
+                nameInput.value = "";
+                phoneInput.value = "";
+            } catch (err) {
+                console.error(err);
+                alert("Error: " + err.message);
+            }
+        });
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            signOut(auth).then(() => window.location.href = "index.html");
+        });
+    </script>
+</body>
+</html>

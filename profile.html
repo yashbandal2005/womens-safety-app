@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - CodeWave SOS</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #e0e0e0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .card { width: 350px; background: linear-gradient(180deg, #ffd1dc 0%, #ffffff 100%); border-radius: 30px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: relative; display: flex; flex-direction: column; height: 650px; }
+        
+        /* Scrollable content for contacts */
+        .profile-content { padding: 25px; flex-grow: 1; text-align: center; overflow-y: auto; scrollbar-width: none; }
+        .profile-content::-webkit-scrollbar { display: none; }
+
+        h2 { color: #333; margin-bottom: 20px; font-weight: 500; }
+        .profile-img-container { position: relative; width: 120px; height: 120px; margin: 0 auto 20px; }
+        .profile-img { width: 100%; height: 100%; border-radius: 50%; background: white; object-fit: cover; border: 5px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .edit-icon { position: absolute; bottom: 5px; right: 5px; background: white; width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #ff69b4; box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer; font-size: 14px; }
+        
+        .info-box { text-align: left; margin-bottom: 15px; }
+        .info-box label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px; color: #666; }
+        .display-field { width: 100%; padding: 10px 15px; border-radius: 10px; border: 1px solid #eee; background: white; color: #333; font-size: 13px; }
+
+        /* Emergency Contacts Section */
+        .contact-section { margin-top: 20px; text-align: left; border-top: 1px solid #ffe4e1; padding-top: 15px; }
+        .contact-section h3 { font-size: 14px; color: #ff1493; margin-bottom: 10px; }
+        .contact-input-group { display: flex; gap: 5px; margin-bottom: 10px; }
+        .contact-input { flex: 1; padding: 8px; border-radius: 8px; border: 1px solid #ddd; font-size: 12px; outline: none; }
+        .btn-add { background: #ff69b4; color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; }
+        
+        .contacts-list { margin-top: 10px; font-size: 12px; color: #444; }
+        .contact-item { background: rgba(255,255,255,0.6); padding: 5px 10px; border-radius: 5px; margin-bottom: 5px; display: flex; justify-content: space-between; }
+
+        .logout-container { text-align: right; margin-top: 15px; padding-bottom: 10px; }
+        .btn-logout { background: #ff85a2; color: white; border: none; padding: 8px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; }
+        
+        .nav-bar { background: #ff85a2; display: flex; justify-content: space-around; align-items: center; padding: 15px 0; border-radius: 0 0 30px 30px; }
+        .nav-item { background: white; width: 42px; height: 42px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #ff1493; font-size: 18px; cursor: pointer; transition: 0.3s; text-decoration: none; }
+        .nav-item.active { border: 2px solid #ff1493; }
+        .nav-item.alert { color: red; font-size: 22px; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="profile-content">
+            <h2>Profile</h2>
+            <div class="profile-img-container">
+                <img src="https://cdn-icons-png.flaticon.com/512/6841/6841913.png" alt="User" class="profile-img" id="userPhoto">
+                <div class="edit-icon"><i class="fas fa-pencil-alt"></i></div>
+            </div>
+
+            <div class="info-box">
+                <label>Full Name</label>
+                <div class="display-field" id="userName">Loading...</div>
+            </div>
+
+            <div class="info-box">
+                <label>Email Address</label>
+                <div class="display-field" id="userEmail">Loading...</div>
+            </div>
+
+            <div class="contact-section">
+                <h3>Emergency Contacts</h3>
+                <div class="contact-input-group">
+                    <input type="text" id="contactName" class="contact-input" placeholder="Name">
+                    <input type="tel" id="contactPhone" class="contact-input" placeholder="Phone">
+                    <button class="btn-add" id="saveContactBtn">Add</button>
+                </div>
+                <div class="contacts-list" id="contactsList">
+                    Loading contacts...
+                </div>
+            </div>
+
+            <div class="logout-container">
+                <button class="btn-logout" id="logoutBtn">Log Out</button>
+            </div>
+        </div>
+
+        <div class="nav-bar">
+            <div class="nav-item alert" onclick="triggerSOS()" title="Send SOS Alert">
+                <i class="fas fa-exclamation-circle"></i>
+            </div>
+            <a href="tel:112" class="nav-item"><i class="fas fa-phone-alt"></i></a>
+            <a href="map.html" class="nav-item"><i class="fas fa-map"></i></a>
+            <a href="info.html" class="nav-item"><i class="fas fa-book-open"></i></a>
+            <a href="profile.html" class="nav-item active"><i class="fas fa-user"></i></a>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBBecl7Q3CN8K-lh3booKDNKDj-iA5BN6w",
+            authDomain: "yash-a7421.firebaseapp.com",
+            projectId: "yash-a7421",
+            storageBucket: "yash-a7421.firebasestorage.app",
+            messagingSenderId: "163386398931",
+            appId: "1:163386398931:web:f686bc5041ea76a18b1c26",
+            measurementId: "G-ZZLJ5HNXWD"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUserUid = null;
+
+        // १. युजर डेटा मॅनेजमेंट
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUserUid = user.uid;
+                document.getElementById('userEmail').innerText = user.email;
+                document.getElementById('userName').innerText = user.displayName || "User";
+                if(user.photoURL) document.getElementById('userPhoto').src = user.photoURL;
+                loadContacts(user.uid);
+            } else {
+                window.location.href = "index.html"; 
+            }
+        });
+
+        // २. कॉन्टॅक्ट्स लोड करणे
+        async function loadContacts(uid) {
+            const listDiv = document.getElementById('contactsList');
+            try {
+                const userDoc = await getDoc(doc(db, "users", uid));
+                if (userDoc.exists() && userDoc.data().emergency_contacts) {
+                    const contacts = userDoc.data().emergency_contacts;
+                    listDiv.innerHTML = contacts.map(c => `<div class="contact-item"><span>${c.name}</span> <b>${c.phone}</b></div>`).join('');
+                } else {
+                    listDiv.innerHTML = "No contacts added yet.";
+                }
+            } catch (e) { listDiv.innerHTML = "Error loading contacts."; }
+        }
+
+        // ३. नवीन कॉन्टॅक्ट सेव्ह करणे
+        document.getElementById('saveContactBtn').addEventListener('click', async () => {
+            const name = document.getElementById('contactName').value;
+            const phone = document.getElementById('contactPhone').value;
+
+            if (!name || !phone) return alert("Please enter both Name and Phone.");
+
+            try {
+                const userRef = doc(db, "users", currentUserUid);
+                // Firestore मधील Array मध्ये नवीन कॉन्टॅक्ट ॲड करणे
+                await setDoc(userRef, {
+                    emergency_contacts: arrayUnion({ name, phone })
+                }, { merge: true });
+
+                alert("Contact Added!");
+                document.getElementById('contactName').value = "";
+                document.getElementById('contactPhone').value = "";
+                loadContacts(currentUserUid);
+            } catch (e) { alert("Error: " + e.message); }
+        });
+
+        // ४. SOS बटण फंक्शन (As it was)
+        window.triggerSOS = async function() {
+            if (!currentUserUid) return;
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(async (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    const userDoc = await getDoc(doc(db, "users", currentUserUid));
+                    const contacts = (userDoc.exists()) ? userDoc.data().emergency_contacts : null;
+
+                    if (!contacts || contacts.length === 0) {
+                        alert("🚨 Please add emergency contacts first!");
+                        return;
+                    }
+
+                    await setDoc(doc(db, "emergency_alerts", currentUserUid), {
+                        sender_name: document.getElementById('userName').innerText,
+                        location: { lat, lng: lon },
+                        contacts: contacts,
+                        timestamp: serverTimestamp(),
+                        status: "ACTIVE"
+                    });
+                    alert(`✅ SOS Alert Sent to ${contacts.length} contacts!`);
+                }, () => alert("Enable GPS to send SOS."));
+            }
+        };
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            signOut(auth).then(() => window.location.href = "index.html");
+        });
+    </script>
+</body>
+</html>

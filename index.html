@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log In - CodeWave</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        
+        body {
+            background-color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .card {
+            width: 350px;
+            background: linear-gradient(180deg, #ffc0cb 0%, #ff69b4 40%, #ff1493 100%);
+            border-radius: 30px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            position: relative;
+            padding-bottom: 30px;
+            height: 650px;
+        }
+
+        .header-wave {
+            height: 220px;
+            background: #ffd1dc;
+            clip-path: polygon(0 0, 100% 0, 100% 65%, 0% 100%);
+            margin-bottom: -40px;
+        }
+
+        .content { padding: 30px; color: white; }
+
+        h2 { font-size: 32px; margin-bottom: 25px; font-weight: 600; }
+
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; font-size: 13px; margin-bottom: 5px; opacity: 0.9; }
+        
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            background: white;
+            color: #333;
+            outline: none;
+        }
+
+        .forgot-pass {
+            display: block;
+            text-align: right;
+            font-size: 12px;
+            color: white;
+            text-decoration: none;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .icon-box {
+            background: white;
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .icon-box img { width: 22px; }
+
+        .footer-action {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 50px;
+        }
+
+        .reg-link { font-size: 13px; text-decoration: none; color: white; }
+        .reg-link b { cursor: pointer; }
+
+        .btn-login {
+            background: white;
+            color: #ff85a2;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: 0.3s;
+        }
+
+        .btn-login:hover { opacity: 0.9; transform: scale(0.98); }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="header-wave"></div>
+        <div class="content">
+            <h2>Log In</h2>
+            
+            <form id="loginForm">
+                <div class="input-group">
+                    <label>Email</label>
+                    <input type="email" id="email" placeholder="Enter your email" required>
+                </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="password" placeholder="••••••••" required>
+                </div>
+
+                <a href="#" class="forgot-pass">Forgot Password?</a>
+
+                <div class="social-icons">
+                    <div class="icon-box">
+                        <img src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" alt="Google">
+                    </div>
+                    <div class="icon-box" style="color: #1877F2;">
+                        <i class="fab fa-facebook-f"></i>
+                    </div>
+                    <div class="icon-box">
+                        <i class="fab fa-apple"></i>
+                    </div>
+                </div>
+
+                <div class="footer-action">
+                    <a href="register.html" class="reg-link">New Here? <b>Register</b></a>
+                    <button type="submit" class="btn-login">Log In</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        // तुझा समाकलित केलेला (Combined) Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyBBecl7Q3CN8K-lh3booKDNKDj-iA5BN6w",
+            authDomain: "yash-a7421.firebaseapp.com",
+            projectId: "yash-a7421",
+            storageBucket: "yash-a7421.firebasestorage.app",
+            messagingSenderId: "163386398931",
+            appId: "1:163386398931:web:f686bc5041ea76a18b1c26",
+            measurementId: "G-ZZLJ5HNXWD"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+ 
+        const loginForm = document.getElementById('loginForm');
+
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    alert("Login Successful!");
+                    // यशस्वी लॉगिन झाल्यावर home.html वर नेईल
+                    window.location.href = "profile.html"; 
+                })
+                .catch((error) => {
+                    let errorMessage = "Login Failed";
+                    if(error.code === 'auth/user-not-found') errorMessage = "User not found. Please register.";
+                    if(error.code === 'auth/wrong-password') errorMessage = "Incorrect password.";
+                    alert(errorMessage + " (" + error.message + ")");
+                });
+        });
+    </script>
+</body>
+</html>
